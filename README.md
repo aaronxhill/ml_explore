@@ -86,4 +86,4 @@ vc.column_means_distribution()
 ```
 Distribution of means of 131072 columns in X.
 ```
-![histogram]('https://github.com/aaronxhill/ml_explore/raw/master/img/hist_viz_columns.png')
+![histogram](https://github.com/aaronxhill/ml_explore/raw/master/img/hist_viz_columns.png "histogram")
