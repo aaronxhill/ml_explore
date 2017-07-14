@@ -1,92 +1,50 @@
 import numpy as np
 import pandas as pd
-
-%matplotlib inline
 import matplotlib.pyplot as plt
-plt.style.use('ggplot')
 
+class BinaryClassificationPerformance():
+    '''Performance measures to evaluate the fit of a binary classification model'''
+    
+    def __init__(self, predictions, labels, desc, probabilities=None):
+        '''Initialize attributes: predictions-vector of predicted values for Y, labels-vector of labels for Y'''
+        '''probabilities-optional, probability that Y is equal to True'''
+        self.probabilities = probabilities
+        self.performance_df = pd.concat([pd.DataFrame(predictions), pd.DataFrame(labels)], axis=1)
+        self.performance_df.columns = ['preds', 'labls']
+        self.desc = desc
+        self.performance_measures = {}
+        self.image_indices = {}
+  
+    def compute_measures(self):
+        '''Compute performance measures defined by Flach p. 57'''
+        self.performance_measures['Pos'] = self.performance_df['labls'].sum()
+        self.performance_measures['Neg'] = self.performance_df.shape[0] - self.performance_df['labls'].sum()
+        self.performance_measures['TP'] = ((self.performance_df['preds'] == True) & (self.performance_df['labls'] == True)).sum()
+        self.performance_measures['TN'] = ((self.performance_df['preds'] == False) & (self.performance_df['labls'] == False)).sum()
+        self.performance_measures['FP'] = ((self.performance_df['preds'] == True) & (self.performance_df['labls'] == False)).sum()
+        self.performance_measures['FN'] = ((self.performance_df['preds'] == False) & (self.performance_df['labls'] == True)).sum()
+        self.performance_measures['Accuracy'] = (self.performance_measures['TP'] + self.performance_measures['TN']) / (self.performance_measures['Pos'] + self.performance_measures['Neg'])
+        self.performance_measures['Precision'] = self.performance_measures['TP'] / (self.performance_measures['TP'] + self.performance_measures['FP'])
+        self.performance_measures['Recall'] = self.performance_measures['TP'] / self.performance_measures['Pos']
 
-from numpy import genfromtxt
+    def img_indices(self):
+        '''Get the indices of true and false positives to be able to locate the corresponding images in a list of image names'''
+        self.performance_df['tp_ind'] = ((self.performance_df['preds'] == True) & (self.performance_df['labls'] == True))
+        self.performance_df['fp_ind'] = ((self.performance_df['preds'] == True) & (self.performance_df['labls'] == False))
+        self.image_indices['TP_indices'] = np.where(self.performance_df['tp_ind']==True)[0].tolist()
+        self.image_indices['FP_indices'] = np.where(self.performance_df['fp_ind']==True)[0].tolist()
 
-test_np = genfromtxt('C:/Users/andy/Documents/GitHub/python-module-summarize/sample.csv', delimiter=',')
-
-
-test_pd = pd.read_csv('C:/Users/andy/Documents/GitHub/python-module-summarize/sample.csv')
-
-nba_pd = pd.read_csv('/Users/Andy/Documents/Python_Project/python-module-summarize/nba_stats.csv')
-
-nba_np = np.genfromtxt('/Users/Andy/Documents/Python_Project/python-module-summarize/nba_stats.csv', delimiter=',')
-
-
-type(nba_np)
-
-type(nba_pd)
-
-
-def check_input_data(d):
-	""" check that input data is a pandas dataframe or series or a numpy ndarray """
-	""" convert input to pandas dataframe (if not one already) """
-	""" return error if input is not any of these data structures """
-
-	structure = type(d)
-
-	structure = str(structure)
-
-
-	if structure == "<class 'pandas.core.frame.DataFrame'>":
-		output = 'Data is a Pandas DataFrame'
-	elif structure == "<class 'pandas.core.frame.Series'>":
-		output = 'Data is a Pandas Series'
-	elif structure == "<class 'numpy.ndarray'>":
-		output = 'Data is a NumPy Array'
-	elif structure == "<class 'dict'>":
-		output = 'Data is a Dictionary'
-	else: 
-		output = 'Data is a List'
-	return output
-
-	if structure == "<class 'numpy.ndarray'>":
-		new_dataframe = pd.DataFrame(data=d[1:,1:], index=d[1:,0], columns=d[0,1:])
-		print("Converted np.array to pd.dataframe")
-	else: d
-	return 
-		
-       
-
-
-
-
-data_structures = {
-		'pandas.core.frame.DataFrame':0,
-		'pandas.core.frame.Series':1,
-		'numpy.ndarry':2,
-		'list':3,
-		'dictionary':4
-		}
-
-
-t = ['t','y','g']
-check_data_type('test')
-
-def check_data_type(): #ANDREW
-	""" simple function to check data type """
-
-class explore():
-	""" summarize and visualize data """
-
-	def __init__(self, data):
-		self.data = data
-
-def summarize(data):
-	""" method to summarize and visualize self.data """
-	types_of_data = data.dtypes
-	summary = data.describe(include = 'all')
-	bxPlt = data.plot.box(return_type='axes', figsize=(30,30))
-	histogram = data.hist(figsize=(20,20))
-	return(types_of_data)
-	return summary
-	print(histogram)
-	print(bxPlt)
-
-
-
+class VizColumns():
+    '''View summarization of distribution of means of columns in a sparse matrix.'''
+    def __init__(self, X):
+        self.X = X
+        self.X_csr_means = []
+        
+    def column_means_distribution(self):
+        if (str(type(self.X)) == "<class 'scipy.sparse.csr.csr_matrix'>"):
+            for i in range(0, self.X.shape[1]):
+                self.X_csr_means.append(self.X.getcol(i).mean())
+            print("Distribution of means of " + str(self.X.shape[1]) + " columns in X.")
+            plt.hist(self.X_csr_means, bins=75);
+        else:
+            raise ValueError("X must be <class 'scipy.sparse.csr.csr_matrix'>")
